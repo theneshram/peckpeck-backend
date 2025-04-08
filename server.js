@@ -8,7 +8,7 @@ const app = express();
 
 // ✅ Proper CORS setup for Azure & frontend
 app.use(cors({
-  origin: 'https://www.peckpeck.in', // 👈 Replace with your actual frontend domain
+  origin: /*'http://localhost:3000',*/ 'https://www.peckpeck.in', // 👈 Replace with your actual frontend domain
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -55,6 +55,7 @@ const menuRoutes = require('./routes/menu');
 const bannerRoutes = require('./routes/banner');
 const locationRoutes = require('./routes/location');
 const offerRoutes = require('./routes/offer');
+const dashboardRoutes = require('./routes/dashboard'); // New dashboard routes
 
 // ✅ Mount Routes
 app.use('/api/feedback', feedbackRoutes);
@@ -65,6 +66,7 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/banner', bannerRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/offers', offerRoutes);
+app.use('/api/dashboard', dashboardRoutes); // Mount dashboard routes
 
 // ✅ Optional health check
 app.get('/api/health', (req, res) => {

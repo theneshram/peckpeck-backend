@@ -20,5 +20,16 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "nodemon": "^2.0.7"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/theneshram/peckpeck-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/theneshram/peckpeck-backend/issues"
+  },
+  "homepage": "https://github.com/theneshram/peckpeck-backend#readme"
 }

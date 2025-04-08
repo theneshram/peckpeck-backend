@@ -5,7 +5,7 @@ const sendMail = require('../utils/mailer');
 
 // POST: Submit new feedback
 router.post('/', async (req, res) => {
-  const { name, email, message, rating } = req.body;
+  const { name, email, message, rating, locationId } = req.body;
 
   if (!name || !message || !rating) {
     return res.status(400).json({ error: 'Name, message, and rating are required.' });
@@ -17,6 +17,9 @@ router.post('/', async (req, res) => {
       email,
       message,
       rating,
+      // locationId is optional if some feedback doesn't associate to a location
+      // but if you require it, just remove `required: false` from the schema
+      locationId: locationId || null,
       status: 'New'
     });
     await newFeedback.save();
@@ -34,7 +37,8 @@ router.post('/', async (req, res) => {
           <div style="padding:20px;background-color:#fff;color:#333;">
             <p><strong>Name:</strong> ${name}</p>
             <p><strong>Email:</strong> ${email || 'N/A'}</p>
-            <p><strong>Rating:</strong> ${rating}</p>
+            <p><strong>Rating:</strong> ${rating} ★</p>
+            ${locationId ? `<p><strong>Location ID:</strong> ${locationId}</p>` : ''}
             <p><strong>Message:</strong></p>
             <p style="background:#f8f8f8;padding:10px;border-radius:4px;">${message}</p>
           </div>
@@ -58,7 +62,7 @@ router.post('/', async (req, res) => {
             </div>
             <div style="padding:20px;background-color:#fff;color:#333;">
               <p>We appreciate your feedback.</p>
-              <p><strong>Your Rating:</strong> ${rating}</p>
+              <p><strong>Your Rating:</strong> ${rating} ★</p>
               <p><strong>Your Message:</strong></p>
               <p style="background:#f8f8f8;padding:10px;border-radius:4px;">${message}</p>
             </div>
@@ -72,6 +76,7 @@ router.post('/', async (req, res) => {
 
     res.status(201).json({ message: 'Feedback submitted successfully' });
   } catch (err) {
+    console.error('Failed to submit feedback:', err);
     res.status(500).json({ error: 'Submission failed. ' + err.message });
   }
 });
@@ -83,7 +88,12 @@ router.get('/', async (req, res) => {
   const skip = (page - 1) * limit;
 
   try {
-    const feedbacks = await Feedback.find().sort({ createdAt: -1 }).skip(skip).limit(limit);
+    // If you want to show location details, chain `.populate('locationId')`
+    const feedbacks = await Feedback.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate('locationId'); // optional, if you want to populate location
     res.json(feedbacks);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -100,10 +110,15 @@ router.put('/:id/status', async (req, res) => {
   }
 
   try {
-    const updated = await Feedback.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    const updated = await Feedback.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
     if (!updated) return res.status(404).json({ error: 'Feedback not found' });
     res.json({ message: 'Status updated successfully', updated });
   } catch (err) {
+    console.error('Failed to update feedback status:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -112,7 +127,9 @@ router.put('/:id/status', async (req, res) => {
 router.post('/reply', async (req, res) => {
   const { to, name, subject, message } = req.body;
   if (!to || !message) {
-    return res.status(400).json({ error: 'Recipient and message are required for reply.' });
+    return res
+      .status(400)
+      .json({ error: 'Recipient and message are required for reply.' });
   }
   try {
     await sendMail({
@@ -135,6 +152,7 @@ router.post('/reply', async (req, res) => {
     });
     res.json({ message: 'Reply sent successfully' });
   } catch (err) {
+    console.error('Failed to send reply:', err);
     res.status(500).json({ error: 'Reply failed. ' + err.message });
   }
 });
@@ -146,6 +164,7 @@ router.delete('/:id', async (req, res) => {
     if (!deleted) return res.status(404).json({ error: 'Feedback not found' });
     res.json({ message: 'Feedback deleted successfully', deleted });
   } catch (err) {
+    console.error('Failed to delete feedback:', err);
     res.status(500).json({ error: err.message });
   }
 });
